@@ -242,9 +242,13 @@ applies every migration whose version exceeds it — each in its own transaction
 that both runs the DDL and stamps `user_version` to that migration's number.
 Apply-and-stamp in one transaction means a crash mid-migration rolls back
 cleanly and re-runs on the next start, never leaving the schema half-applied. A
-fresh database (`user_version` 0) runs the whole chain; an up-to-date one is a
-no-op. The loader enforces a gap-free sequence from 1, so `user_version` equals
-the number of migrations applied and a mis-numbered file fails loudly at startup.
+fresh, empty database (`user_version` 0) runs the whole chain; an up-to-date
+one is a no-op. An unversioned upstream database with recognized legacy schema
+markers is adopted in one transaction: missing baseline objects are created,
+old playlist stores and resume positions are imported, known column drift is
+reconciled, and version 2 is stamped only after every step succeeds. The loader
+enforces a gap-free sequence from 1, so `user_version` equals the number of
+migrations applied and a mis-numbered file fails loudly at startup.
 
 Because each migration runs exactly once against a known state, migration DDL is
 plain `CREATE`/`ALTER` (no `IF NOT EXISTS`): a double-apply is a bug and should

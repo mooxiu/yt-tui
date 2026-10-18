@@ -77,19 +77,21 @@ func (d *DB) migrate() error {
 	if err != nil {
 		return err
 	}
-	// Databases predating this runner carry a hand-stamped user_version (2) that
-	// has no relation to the migration sequence, so every migration up to it
-	// would be skipped and their drifted schema frozen forever. Their schema is
-	// baseline-equivalent, so treat them as version 1 and let the reconciling
-	// migrations (0002 onward) run.
-	if current > 0 {
-		legacy, err := d.hasLegacySchema(ctx)
-		if err != nil {
+	legacy, err := d.hasLegacySchema(ctx)
+	if err != nil {
+		return err
+	}
+	if legacy && current == 0 {
+		// Original upstream releases never stamped a version and may still use
+		// separate playlist tables. Adopt them before treating zero as empty.
+		if err := d.adoptUnversionedSchema(ctx, ms); err != nil {
 			return err
 		}
-		if legacy {
-			current = 1
-		}
+		current = 2
+	} else if legacy {
+		// Later pre-runner builds hand-stamped version 2, unrelated to the
+		// migration sequence. Reconcile their baseline-equivalent schema.
+		current = 1
 	}
 	for _, m := range ms {
 		if m.version <= current {
