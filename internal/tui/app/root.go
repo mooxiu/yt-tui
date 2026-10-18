@@ -669,6 +669,8 @@ func (r Root) handleKey(msg tea.KeyPressMsg) (Root, tea.Cmd) {
 	switch {
 	case key.Matches(msg, r.keys.Quit):
 		return r, tea.Quit
+	case key.Matches(msg, r.keys.TogglePause):
+		return r, r.playback.TogglePauseCmd()
 	case key.Matches(msg, r.keys.Help):
 		return r.handleOpenHelp()
 	case key.Matches(msg, r.keys.Export):
@@ -702,6 +704,11 @@ func (r Root) handleKeyWithOverlay(msg tea.KeyPressMsg) (Root, tea.Cmd) {
 	}
 	if !top.HasFocus() && r.activeTab().InterceptsInput() {
 		return r.forwardKeyToActiveTab(msg)
+	}
+
+	// Focused overlays keep their own space actions (for example export selection).
+	if !top.HasFocus() && key.Matches(msg, r.keys.TogglePause) {
+		return r, r.playback.TogglePauseCmd()
 	}
 
 	// Help is global but special-cased first: when help is already on top, fall

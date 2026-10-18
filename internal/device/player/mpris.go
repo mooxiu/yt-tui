@@ -15,6 +15,7 @@ import (
 
 // mprisBackend launches a player and tracks position via D-Bus MPRIS2.
 type mprisBackend struct {
+	pauseControl
 	driver Driver
 	conn   *dbus.Conn
 
@@ -64,6 +65,10 @@ func (b *mprisBackend) exec(videoID string, args []string, startAt time.Duration
 		return nil, fmt.Errorf("exec: open devnull: %w", err)
 	}
 	defer null.Close()
+	args, socketDir, err := preparePauseControl(b.driver, args)
+	if err != nil {
+		return nil, err
+	}
 	cmd := exec.CommandContext(context.Background(), b.driver.Path(), args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	cmd.Stdout = null
@@ -79,6 +84,7 @@ func (b *mprisBackend) exec(videoID string, args []string, startAt time.Duration
 	}
 	if err := cmd.Start(); err != nil {
 		console.close()
+		cleanupPauseControl(socketDir)
 		return nil, fmt.Errorf("exec: %w", err)
 	}
 
@@ -91,8 +97,10 @@ func (b *mprisBackend) exec(videoID string, args []string, startAt time.Duration
 	b.mu.Unlock()
 
 	go b.pollSession(sess, cmd.Process.Pid)
+	b.pauseControl.set(socketDir, sess)
 	go func() {
 		waitErr := cmd.Wait()
+		cleanupPauseControl(socketDir)
 		sess.finishWith(waitErr, console.tail())
 		console.close()
 	}()

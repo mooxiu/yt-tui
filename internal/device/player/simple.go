@@ -10,6 +10,7 @@ import (
 )
 
 type simpleBackend struct {
+	pauseControl
 	driver Driver
 }
 
@@ -23,6 +24,10 @@ func (s *simpleBackend) exec(args []string) (*Session, error) {
 		return nil, fmt.Errorf("exec: open devnull: %w", err)
 	}
 	defer null.Close()
+	args, socketDir, err := preparePauseControl(s.driver, args)
+	if err != nil {
+		return nil, err
+	}
 	cmd := exec.CommandContext(context.Background(), s.driver.Path(), args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 	cmd.Stdout = null
@@ -38,12 +43,15 @@ func (s *simpleBackend) exec(args []string) (*Session, error) {
 	}
 	if err := cmd.Start(); err != nil {
 		console.close()
+		cleanupPauseControl(socketDir)
 		return nil, fmt.Errorf("exec: %w", err)
 	}
 	sess := newSession(0)
 	sess.setPosition(0, false) // simple backend has no position tracking
+	s.pauseControl.set(socketDir, sess)
 	go func() {
 		waitErr := cmd.Wait()
+		cleanupPauseControl(socketDir)
 		sess.finishWith(waitErr, console.tail())
 		console.close()
 	}()

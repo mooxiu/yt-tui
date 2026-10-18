@@ -263,6 +263,7 @@ current panel are offered.
 | `Enter` | Context action: stream video / open channel / open playlist / show history detail |
 | `p` | Play video (streams, or plays the local file if downloaded) |
 | `P` | Play audio |
+| `Space` | Pause / resume active playback (mpv; MPRIS-capable players with the mpris backend) |
 | `d` | Download video |
 | `D` | Download audio |
 | `i` | Toggle the video detail overlay |

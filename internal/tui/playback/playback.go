@@ -300,3 +300,20 @@ func (c Controller) handleEnded(m endedMsg) tea.Cmd {
 		return tuipkg.StatusMsg{Text: m.diag, IsErr: true}
 	})
 }
+
+// TogglePauseCmd controls active playback independently of the selected row.
+func (c Controller) TogglePauseCmd() tea.Cmd {
+	return func() tea.Msg {
+		if c.player == nil {
+			return tuipkg.StatusMsg{Text: "nothing is playing", IsErr: true}
+		}
+		controller, ok := c.player.(interface{ TogglePause() error })
+		if !ok {
+			return tuipkg.StatusMsg{Text: "player does not support pause/resume", IsErr: true}
+		}
+		if err := controller.TogglePause(); err != nil {
+			return tuipkg.StatusMsg{Text: "pause/resume: " + err.Error(), IsErr: true}
+		}
+		return tuipkg.StatusMsg{Text: "Playback pause/resume toggled"}
+	}
+}

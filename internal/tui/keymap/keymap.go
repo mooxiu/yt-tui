@@ -36,6 +36,7 @@ type KeyMap struct {
 	DownloadAudio  key.Binding
 	Play           key.Binding
 	PlayAudio      key.Binding
+	TogglePause    key.Binding
 	Delete         key.Binding
 	HideVideo      key.Binding
 	HideChannel    key.Binding
@@ -101,6 +102,7 @@ func Build(kb config.KeyBindings) KeyMap { //nolint:funlen // flat binding table
 		DownloadAudio: b(kb.DownloadAudio, "download audio"),
 		Play:          b(kb.Play, "stream video"),
 		PlayAudio:     b(kb.PlayAudio, "stream audio"),
+		TogglePause:   b(kb.TogglePause, "pause/resume playback"),
 		Delete:        b(kb.Delete, "delete"),
 		HideVideo:     b(kb.HideVideo, "hide video"),
 		HideChannel:   b(kb.HideChannel, "block channel"),

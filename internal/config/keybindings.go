@@ -32,6 +32,7 @@ type KeyBindings struct {
 	DownloadAudio  string `toml:"download_audio" json:"download_audio"`
 	Delete         string `toml:"delete" json:"delete"`
 	Play           string `toml:"play" json:"play"`
+	TogglePause    string `toml:"toggle_pause" json:"toggle_pause"`
 	PlayAudio      string `toml:"play_audio" json:"play_audio"`
 	HideVideo      string `toml:"hide_video" json:"hide_video"`
 	HideChannel    string `toml:"hide_channel" json:"hide_channel"`
@@ -97,6 +98,7 @@ func defaultKeyBindings() KeyBindings { //nolint:funlen // flat default table: o
 		Delete:         "x",
 		Play:           "p",
 		PlayAudio:      "P",
+		TogglePause:    "space",
 		HideVideo:      "b",
 		HideChannel:    "B",
 		CopyURL:        "y",
