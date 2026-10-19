@@ -20,6 +20,7 @@ type srchResultMsg struct {
 	channels []domain.Channel
 	videos   []domain.Video
 	err      error
+	cached   bool
 }
 type srchChannelVideosMsg struct {
 	tuipkg.TabTarget
@@ -111,6 +112,7 @@ type Search struct {
 	input     textinput.Model
 	loading   bool
 	lastQuery string
+	cache     map[string]searchCacheEntry // accessed only by the Update goroutine
 	channels  []domain.Channel
 	videos    []domain.Video
 
@@ -158,6 +160,7 @@ func NewSearch(ctx context.Context, backend searchBackend, keys keymap.KeyMap, c
 		circular: circular,
 		input:    ti,
 		histIdx:  -1,
+		cache:    make(map[string]searchCacheEntry),
 		chNav:    videotable.NewTableNav(chCols, circular, 3),
 		vidNav:   videotable.NewTableNav(vidCols, circular, 3),
 		drill:    newDrillState(circular),
@@ -350,6 +353,9 @@ func (t Search) onSearchResult(m srchResultMsg) (tea.Model, tea.Cmd) {
 		return t, errMsg("search: " + m.err.Error())
 	}
 	t.lastQuery = m.query
+	if !m.cached {
+		t.cacheResult(m)
+	}
 	t.channels = m.channels
 	t.videos = m.videos
 	t.applyResultHeights()

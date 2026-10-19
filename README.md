@@ -71,6 +71,8 @@ have.
 - **Tags** view — organize channels with your own tags and browse by tag
 - YouTube **search** with persistent, navigable search history (`↑`/`↓` in the
   search box)
+  and an in-memory result cache (up to 50 queries for 15 minutes each, cleared
+  when the app exits)
 - Drill into any channel to see its full video list
 - Per-column sorting everywhere: date, views, name, channel, duration,
   subscribers, tags, file size

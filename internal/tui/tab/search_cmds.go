@@ -1,6 +1,9 @@
 package tab
 
 import (
+	"strings"
+	"time"
+
 	tea "charm.land/bubbletea/v2"
 
 	"github.com/EugeneShtoka/yt-tui/internal/domain"
@@ -8,9 +11,18 @@ import (
 )
 
 func (t Search) srchCmd(query string) tea.Cmd {
+	query = strings.TrimSpace(query)
+	// Capture the cache entry on the Update goroutine; commands run concurrently.
+	cached, hit := t.cache[query]
+	hit = hit && time.Now().Before(cached.expiresAt)
 	return func() tea.Msg {
 		ctx := t.ctx
 		_ = t.backend.AddHistory(ctx, "", "search", query)
+		if hit {
+			result := cached.result
+			result.cached = true
+			return result
+		}
 		channels, videos, err := t.backend.Search(ctx, query)
 		if err != nil {
 			return srchResultMsg{TabTarget: tuipkg.TabTarget{Tab: tuipkg.TabSearch}, query: query, err: err}
