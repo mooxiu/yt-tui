@@ -67,6 +67,11 @@ func (t Search) viewResults(prompt string, remaining int) string {
 	if len(t.channels) > 0 {
 		parts = append(parts, t.srchPaneLabel("Channels", !t.onVideos), t.chNav.View())
 	}
+	if len(t.channels) > 0 && len(t.videos) > 0 {
+		divider := lipgloss.NewStyle().Foreground(styles.ColorBorder).
+			Render(strings.Repeat("─", max(t.width, 0)))
+		parts = append(parts, "", divider, "")
+	}
 	if len(t.videos) > 0 {
 		parts = append(parts, t.srchPaneLabel("Videos", t.onVideos), t.vidNav.View())
 	}

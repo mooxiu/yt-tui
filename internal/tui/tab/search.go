@@ -210,7 +210,7 @@ func (t *Search) applyResultHeights() {
 	nVid := len(t.videos)
 	avail := t.height - 3 // header + prompt + status line
 	if nCh > 0 && nVid > 0 {
-		avail -= 4 // two pane labels + separators in the split layout
+		avail -= 7 // two pane labels + table headers + divider with a blank line on each side
 		chH := max(min(nCh, avail/chanPaneMaxFraction), 1)
 		vidH := max(avail-chH, 1)
 		t.chNav.SetTargetHeight(chH)
