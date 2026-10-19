@@ -29,6 +29,9 @@ const staleLagTolerance = 30 * 24 * time.Hour
 // RPC for remote mode) is a planned follow-up; today remote clients simply skip
 // the probe.
 func Probe(ctx context.Context, cfg *config.Config) []config.ConfigIssue {
+	// Diagnostics can run while the UI applies a profile. Hold a consistent
+	// settings snapshot rather than reading the live config during subprocesses.
+	cfg = &config.Config{DaemonConfig: cfg.DaemonSnapshot(), StateDir: cfg.StateDir}
 	return availabilityProbe{
 		cfg:       cfg,
 		lookPath:  exec.LookPath,

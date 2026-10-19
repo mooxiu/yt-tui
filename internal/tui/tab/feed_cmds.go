@@ -55,10 +55,7 @@ func (t *Feed) refreshCmd(full bool) tea.Cmd {
 func (t Feed) recCacheCmd() tea.Cmd {
 	return func() tea.Msg {
 		videos, err := t.backend.GetFeedCache(t.ctx, "recommended")
-		if err != nil || len(videos) == 0 {
-			return t.recFetchCmd()()
-		}
-		return feedRecCacheMsg{TabTarget: feedTarget, videos: videos}
+		return feedRecCacheMsg{TabTarget: feedTarget, videos: videos, err: err}
 	}
 }
 

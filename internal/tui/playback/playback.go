@@ -127,6 +127,12 @@ func New(ctx context.Context, backend Backend, pl player.Backend, ytdlp YtdlpInf
 	return Controller{ctx: ctx, backend: backend, player: pl, ytdlp: ytdlp}
 }
 
+// WithYtdlpInfo applies diagnostics collected after startup on the UI goroutine.
+func (c Controller) WithYtdlpInfo(info YtdlpInfo) Controller {
+	c.ytdlp = info
+	return c
+}
+
 // Update handles the playback-related messages and reports whether it consumed
 // the message. It never mutates caller state — it only produces commands — so
 // Root can delegate without threading its model through.

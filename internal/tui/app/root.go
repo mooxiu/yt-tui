@@ -64,6 +64,7 @@ type Root struct {
 	spinnerRunning bool
 
 	selectionDebounceToken int
+	startupDiagnostics     tea.Cmd
 }
 
 // New constructs the Root with the current tab set.
@@ -137,7 +138,7 @@ func (r Root) Init() tea.Cmd {
 	for _, t := range r.router.tabs {
 		cmds = append(cmds, t.Init())
 	}
-	cmds = append(cmds, r.spinner.Tick, pollTickCmd())
+	cmds = append(cmds, r.spinner.Tick, pollTickCmd(), r.startupDiagnostics)
 	return tea.Batch(cmds...)
 }
 
@@ -174,6 +175,13 @@ func (r Root) syncSpinner() (Root, tea.Cmd) {
 
 func (r Root) updateDispatch(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m := msg.(type) {
+	case StartupDiagnosticsMsg:
+		r.playback = r.playback.WithYtdlpInfo(m.Ytdlp)
+		if len(m.Issues) > 0 {
+			r.overlays = append(r.overlays, ovpkg.NewConfigIssues(m.Issues, r.keys))
+			return r.handleResize(r.width, r.height)
+		}
+		return r, nil
 	case tea.WindowSizeMsg:
 		return r.handleResize(m.Width, m.Height)
 	case tea.KeyPressMsg:

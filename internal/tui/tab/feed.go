@@ -64,6 +64,7 @@ var feedTarget = tuipkg.TabTarget{Tab: tuipkg.TabFeed}
 type feedRecCacheMsg struct {
 	tuipkg.TabTarget
 	videos []domain.Video
+	err    error
 }
 
 // feedRecFetchedMsg carries the network Recommended() result to merge into the
@@ -319,13 +320,17 @@ func (t Feed) filterRec(vids []domain.Video) []domain.Video {
 	return feed.FilterRecommended(vids, t.recMaxAgeDays, t.recMinDurationSecs, t.recMinViews)
 }
 
-// onRecCache seeds the recommended source from the cache and kicks off a network
-// refresh (recLoad stays srcLoading until the fetch lands). The cached set is
-// filtered on load so stale entries below the current thresholds drop out.
+// onRecCache loads the recommended source without fetching from YouTube.
+// The cached set is filtered against the current display thresholds.
 func (t Feed) onRecCache(m feedRecCacheMsg) (tea.Model, tea.Cmd) {
+	t.recLoad = srcLoaded
+	if m.err != nil {
+		t.rebuild()
+		return t, errMsg("feed cache: " + m.err.Error())
+	}
 	t.recVideos = t.filterRec(m.videos)
 	t.rebuild()
-	return t, t.recFetchCmd()
+	return t, nil
 }
 
 // onRecFetched merges the network recommended result into the source, persists

@@ -1,6 +1,37 @@
 package main
 
-import "testing"
+import (
+	"context"
+	"testing"
+
+	"github.com/EugeneShtoka/yt-tui/internal/api/apitest"
+	"github.com/EugeneShtoka/yt-tui/internal/config"
+	"github.com/EugeneShtoka/yt-tui/internal/tui/app"
+)
+
+type diagnosticBackend struct {
+	apitest.NopBackend
+	called bool
+}
+
+func (b *diagnosticBackend) CheckAvailability(ctx context.Context) ([]config.ConfigIssue, error) {
+	b.called = true
+	return []config.ConfigIssue{{Severity: config.SeverityWarning, Message: "test issue"}}, ctx.Err()
+}
+
+func TestStartupDiagnosticsAreDeferred(t *testing.T) {
+	// No local yt-dlp is needed for this test.
+	t.Setenv("PATH", t.TempDir())
+	backend := &diagnosticBackend{}
+	cmd := startupDiagnosticsCmd(t.Context(), backend)
+	if backend.called {
+		t.Fatal("creating startup diagnostics must not run checks")
+	}
+	msg, ok := cmd().(app.StartupDiagnosticsMsg)
+	if !ok || !backend.called || len(msg.Issues) != 1 {
+		t.Fatalf("command did not deliver background checks: %#v", msg)
+	}
+}
 
 // TestRunPositionTrackerArgValidation covers the tracker subcommand's argument
 // handling — the paths that reject bad input before touching the config or DB.

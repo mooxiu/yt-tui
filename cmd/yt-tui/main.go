@@ -112,12 +112,6 @@ func run() error {
 		defer pl.Close()
 	}
 
-	if av, perr := backend.CheckAvailability(context.Background()); perr == nil {
-		issues = append(issues, av...)
-	} else {
-		debug.Log("availability probe failed: %v", perr)
-	}
-
 	return runTUI(backend, media, cfg, pl, issues, *connectAddr, *configPath)
 }
 
@@ -140,13 +134,25 @@ func runTUI(backend api.Backend, media api.MediaProvider, cfg *config.Config, pl
 	maybeStartPrewarm(appCtx, backend, media, cfg, connectAddr)
 	maybeStartUpdateCheck(appCtx, cfg, connectAddr)
 
-	p := tea.NewProgram(app.New(appCtx, backend, media, cfg, pl, issues, ytdlpInfo(appCtx)))
+	root := app.New(appCtx, backend, media, cfg, pl, issues, playback.YtdlpInfo{}).
+		WithStartupDiagnostics(startupDiagnosticsCmd(appCtx, backend))
+	p := tea.NewProgram(root)
 	if _, err := p.Run(); err != nil {
 		return fmt.Errorf("run: %w", err)
 	}
 
 	handoffToTracker(pl, cfg, connectAddr, configPath)
 	return nil
+}
+
+func startupDiagnosticsCmd(ctx context.Context, backend api.StatusBackend) tea.Cmd {
+	return func() tea.Msg {
+		issues, err := backend.CheckAvailability(ctx)
+		if err != nil {
+			debug.Log("availability probe failed: %v", err)
+		}
+		return app.StartupDiagnosticsMsg{Issues: issues, Ytdlp: ytdlpInfo(ctx)}
+	}
 }
 
 // maybeStartUpdateCheck refreshes the cached newest-yt-dlp release in the

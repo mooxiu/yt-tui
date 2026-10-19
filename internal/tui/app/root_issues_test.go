@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/EugeneShtoka/yt-tui/internal/api/apitest"
@@ -16,6 +17,23 @@ func normalizedConfig() *config.Config {
 	cfg := &config.Config{}
 	cfg.Normalize()
 	return cfg
+}
+
+func TestStartupDiagnosticsArriveAfterFirstFrame(t *testing.T) {
+	r := New(t.Context(), apitest.NopBackend{}, apitest.NopBackend{}, normalizedConfig(), nil, nil, playback.YtdlpInfo{})
+	r, _ = r.handleResize(80, 24)
+	if r.View().Content == "" {
+		t.Fatal("UI should render before diagnostics arrive")
+	}
+	msg := StartupDiagnosticsMsg{
+		Issues: []config.ConfigIssue{{Severity: config.SeverityWarning, Message: "yt-dlp unavailable"}},
+		Ytdlp:  playback.YtdlpInfo{Version: "2026.10.01"},
+	}
+	m, _ := r.Update(msg)
+	updated := m.(Root)
+	if len(updated.overlays) != 1 || !strings.Contains(updated.View().Content, "yt-dlp unavailable") {
+		t.Fatal("background diagnostic issue should be displayed")
+	}
 }
 
 // TestNewOpensConfigIssuesOverlay: when Load reports issues, Root surfaces them

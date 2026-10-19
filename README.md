@@ -4,7 +4,7 @@ A fast, keyboard-driven **terminal UI for YouTube** — browse recommendations a
 subscriptions, search, manage playlists, download video/audio, and play it all
 without ever opening a browser. Built with [Bubble Tea](https://github.com/charmbracelet/bubbletea),
 powered by [yt-dlp](https://github.com/yt-dlp/yt-dlp), and backed by a local
-SQLite cache so every list opens instantly and refreshes in the background.
+SQLite cache so lists open quickly. Feed recommendations refresh on demand (`r`).
 
 No API keys. No telemetry. No accounts beyond the browser cookies you already
 have.
@@ -43,8 +43,8 @@ have.
 
 - **Everything in the terminal.** Recommendations, subscriptions, search,
   playlists, downloads, and playback — one vim-style TUI, no browser tab.
-- **Instant.** Every feed and channel list loads from a local SQLite cache
-  immediately, then refreshes in the background. You never wait on a spinner to
+- **Instant.** Feed and channel lists load from a local SQLite cache.
+  Refresh Feed recommendations on demand with `r`. You never wait on a spinner to
   start scrolling.
 - **Private by design.** All traffic goes through yt-dlp using your existing
   browser cookies. No official YouTube API, no API key, no telemetry, nothing
@@ -563,7 +563,8 @@ yt-tui --connect https://server:7373
   API key.**
 - **Cache-first UI.** A single SQLite database (pure-Go driver, no CGo) stores
   feeds, channels, history, positions, and detail caches. Lists render from cache
-  instantly; a background pass refreshes them and enriches videos (correcting
+  instantly; Feed recommendations refresh only when requested. A background pass
+  updates subscribed channels and enriches videos (correcting
   upload dates, caching thumbnails and transcripts, computing SponsorBlock cuts).
 - **One backend, two topologies.** A single `Backend` interface sits between the
   UI and the outside world. In single-binary mode the TUI calls it in-process; in
